@@ -63,25 +63,11 @@ func NewInt(num string) (Bigint, error) {
 }
 
 func (z *Bigint) Set(num string) error {
-	allowed := "1234567890-"
-	var err bool
-
-	if strings.HasPrefix(num, "+") {
-		num = strings.Replace(num, "+", "", 1)
-	}
-	if strings.HasPrefix(num, "0") {
-		err = true
-	}
-	arr := strings.Split(num, "")
-	for _, v := range arr {
-		if !strings.Contains(allowed, v) {
-			err = true
-		}
-
-	}
+	err, num := validateNumber(num)
 	if err {
 		return ErrorBadInput
 	}
+	num = removeZeros(num)
 	z.Value = num
 	return nil
 }
@@ -236,6 +222,24 @@ func Multiply(a, b Bigint) Bigint {
 	if string1 == "0" || string2 == "0" {
 		return Bigint{Value: "0"}
 	}
+	var flag bool
+	if (string(string1[0]) == "-" || string(string2[0]) == "-") && (string(string1[0]) != "-" || string(string2[0]) != "-") {
+		flag = true
+	}
+
+	if string(string1[0]) == "-" && string(string2[0]) != "-" {
+		string1 = string1[1:]
+	}
+
+	if string(string1[0]) != "-" && string(string2[0]) == "-" {
+		string2 = string2[1:]
+	}
+
+	if string(string1[0]) == "-" && string(string2[0]) == "-" {
+		string1 = string1[1:]
+		string2 = string2[1:]
+	}
+
 	if len(string1) < len(string2) {
 		x := string1
 		string1 = string2
@@ -266,6 +270,10 @@ func Multiply(a, b Bigint) Bigint {
 	for _, v := range mySlice {
 		value := Bigint{Value: v}
 		res = Add(res, value)
+	}
+
+	if flag {
+		res.Value = "-" + res.Value
 	}
 	return res
 }
