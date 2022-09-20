@@ -279,15 +279,32 @@ func Multiply(a, b Bigint) Bigint {
 }
 
 func Mod(a, b Bigint) Bigint {
-	// string1 :=a.Value
-	// string2 :=b.Value
-	// l := len(string2)-1
+	string1 := a.Value
+	string2 := b.Value
+	if compareStrings(string1, string2) == -1 {
+		return Bigint{Value: string1}
+	}
+	l := len(string2)
+	str1 := string1[:l]
 
-	// for l<len(string1){
-	// 	str1 := string1[:l]
+	for {
 
-	// }
-	return Bigint{Value: ""}
+		if compareStrings(str1, string2) >= 0 {
+			str1 = Sub(Bigint{Value: str1}, Bigint{Value: string2}).Value
+
+		} else if l >= len(string1) {
+			break
+		} else {
+
+			str1 = str1 + string(string1[l])
+			l++
+
+		}
+	}
+	for strings.HasPrefix(str1, "0") {
+		str1 = str1[1:]
+	}
+	return Bigint{Value: str1}
 }
 
 func (x *Bigint) Abs() Bigint {
