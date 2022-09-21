@@ -8,12 +8,12 @@ import (
 
 func main() {
 
-	a, err := bigint.NewInt("42342534636475898890")
+	a, err := bigint.NewInt("-13")
 	if err != nil {
 		panic(err)
 	}
 
-	b, err := bigint.NewInt("34534546457657")
+	b, err := bigint.NewInt("-5")
 	if err != nil {
 		panic(err)
 	}

@@ -219,6 +219,7 @@ func Sub(a, b Bigint) Bigint {
 func Multiply(a, b Bigint) Bigint {
 	string1 := a.Value
 	string2 := b.Value
+
 	if string1 == "0" || string2 == "0" {
 		return Bigint{Value: "0"}
 	}
@@ -279,11 +280,35 @@ func Multiply(a, b Bigint) Bigint {
 }
 
 func Mod(a, b Bigint) Bigint {
+	err := errors.New("ZeroDivisionError: integer division or modulo by zero")
 	string1 := a.Value
 	string2 := b.Value
+	result := ""
 	if compareStrings(string1, string2) == -1 {
 		return Bigint{Value: string1}
 	}
+	if string2 == "0" {
+		panic(err)
+	}
+	if string(string1[0]) == "-" && string(string2[0]) != "-" {
+		result = mod(string1[1:], string2)
+		result = Sub(Bigint{Value: string2}, Bigint{Value: result}).Value
+	} else if string(string1[0]) != "-" && string(string2[0]) == "-" {
+
+		result = mod(string1, string2[1:])
+		result = "-" + Sub(Bigint{Value: string2[1:]}, Bigint{Value: result}).Value
+	} else if string(string1[0]) == "-" && string(string2[0]) == "-" {
+		result = "-" + mod(string1[1:], string2[1:])
+
+	} else {
+		result = mod(string1, string2)
+
+	}
+
+	return Bigint{Value: result}
+}
+
+func mod(string1, string2 string) string {
 	l := len(string2)
 	str1 := string1[:l]
 
@@ -304,7 +329,7 @@ func Mod(a, b Bigint) Bigint {
 	for strings.HasPrefix(str1, "0") {
 		str1 = str1[1:]
 	}
-	return Bigint{Value: str1}
+	return str1
 }
 
 func (x *Bigint) Abs() Bigint {
