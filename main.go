@@ -8,28 +8,35 @@ import (
 
 func main() {
 
-	a, err := bigint.NewInt("-13")
+	a, err := bigint.NewInt("0")
 	if err != nil {
 		panic(err)
 	}
 
-	b, err := bigint.NewInt("-5")
+	b, err := bigint.NewInt("-123")
 	if err != nil {
 		panic(err)
 	}
 
-	// err = a.Set("34324")
+	// err = a.Set("-0000")
 	// if err != nil {
 	// 	panic(err)
 	// }
+	// err = b.Set("34324")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	
+
 	// c := bigint.Add(a, b)
 	// d := bigint.Sub(a, b)
 	// e := bigint.Multiply(a, b)
-	f := bigint.Mod(a, b)
+	d, f := bigint.ModAndDivision(a, b)
 	// fmt.Println(a)
 	// fmt.Println(b)
 	// fmt.Println(c)
 	// fmt.Println(d)
 	// fmt.Println(e)
-	fmt.Println(f)
+	// fmt.Printf("Quotient: %v Remainder: %v\n",d.Value,f.Value)
+	fmt.Println(d.Value,f.Value)
 }

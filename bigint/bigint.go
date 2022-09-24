@@ -4,8 +4,11 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	
 )
 
+var ErrorBadInput = errors.New("bad input, please input only number")
+var ErrorZeroDivision = errors.New("ZeroDivisionError: integer division or modulo by zero")
 type Bigint struct {
 	Value string
 }
@@ -15,9 +18,8 @@ func removeZeros(num string) string {
 	if strings.HasPrefix(num, "-") {
 		p = 1
 		num = num[1:]
-	} else if strings.HasPrefix(num, "+") {
-		num = num[1:]
-	}
+	} 
+	num = strings.TrimPrefix(num,"+")
 
 	for strings.HasPrefix(num, "0") && len(num) > 1 {
 		num = num[1:]
@@ -49,17 +51,14 @@ func validateNumber(num string) (bool, string) {
 	return err, num
 }
 
-var ErrorBadInput = errors.New("bad input, please input only number")
-
 func NewInt(num string) (Bigint, error) {
 	err, num := validateNumber(num)
 	if err {
 		return Bigint{Value: num}, ErrorBadInput
-	} else {
-		num = removeZeros(num)
-		return Bigint{Value: num}, nil
-
 	}
+	num = removeZeros(num)
+	return Bigint{Value: num}, nil
+
 }
 
 func (z *Bigint) Set(num string) error {
@@ -90,13 +89,17 @@ func Add(a, b Bigint) Bigint {
 	if string(string1[0]) == "-" && string(string2[0]) != "-" {
 		return Sub(Bigint{Value: string2}, Bigint{Value: string1[1:]})
 	}
-	var flag bool
 	if string(string1[0]) == "-" && string(string2[0]) == "-" {
-		string1 = string1[1:]
-		string2 = string2[1:]
-		flag = true
+		sum := "-"+add(string1[1:],string2[1:])
+		return Bigint{Value:sum}
 	}
+	sum = add(string1, string2)
+	return Bigint{Value:sum}
+}
 
+
+func add(string1,string2 string)string{
+	sum :=""
 	reminder := 0
 	for i := 0; i < max(len(string1), len(string2)); i++ {
 		number1, number2 := 0, 0
@@ -108,7 +111,6 @@ func Add(a, b Bigint) Bigint {
 		if i < len(string2) {
 			number2 = int(string2[len(string2)-1-i] - '0')
 		}
-
 		summa := number1 + number2 + reminder
 		sum = strconv.Itoa(summa%10) + sum
 		reminder = summa / 10
@@ -117,12 +119,8 @@ func Add(a, b Bigint) Bigint {
 	if reminder > 0 {
 		sum = strconv.Itoa(reminder) + sum
 	}
-	if flag {
-		sum = "-" + sum
-	}
-	return Bigint{
-		Value: sum,
-	}
+	return sum
+
 }
 
 func compareStrings(string1, string2 string) int {
@@ -147,36 +145,39 @@ func compareStrings(string1, string2 string) int {
 	return res
 }
 
-func Sub(a, b Bigint) Bigint {
-
+func Sub(a, b Bigint) (subResult Bigint ){
+	
 	string1 := a.Value
 	string2 := b.Value
 
 	if string(string1[0]) != "-" && string(string2[0]) == "-" {
-		return Add(Bigint{Value: string1}, Bigint{Value: string2[1:]})
+		subResult.Value=add(string1,string2[1:])
+		return 
 	}
 	if string(string1[0]) == "-" && string(string2[0]) != "-" {
-		return Add(Bigint{Value: string1}, Bigint{Value: "-" + string2})
+		subResult.Value ="-"+add(string1[1:],string2)
+		return 
 	}
 
 	if string(string1[0]) == "-" && string(string2[0]) == "-" {
-		x := string1[1:]
-		string1 = string2[1:]
-		string2 = x
-
+		subResult.Value = sub(string2[1:],string1[1:])
+		return
 	}
+
+	subResult.Value = sub(string1,string2)
+	return
+}
+
+func sub(string1, string2 string) string{
 	compare := compareStrings(string1, string2)
 
 	if compare == -1 {
-		new := string2
-		string2 = string1
-		string1 = new
+		string1,string2 = string2,string1
 
 	} else if compare == 0 {
-		return Bigint{
-			Value: "0",
-		}
+		return "0"
 	}
+	
 	sub := ""
 	carry := 0
 	for i := 0; i < max(len(string1), len(string2)); i++ {
@@ -201,18 +202,14 @@ func Sub(a, b Bigint) Bigint {
 		sub = strconv.Itoa(subtract) + sub
 
 	}
-	for strings.HasPrefix(sub, "0") {
-		sub = sub[1:]
-	}
+	
 
 	if compare == -1 {
 		sub = "-" + sub
 
 	}
 
-	return Bigint{
-		Value: sub,
-	}
+	return removeZeros(sub)
 
 }
 
@@ -223,16 +220,14 @@ func Multiply(a, b Bigint) Bigint {
 	if string1 == "0" || string2 == "0" {
 		return Bigint{Value: "0"}
 	}
+	
 	var flag bool
-	if (string(string1[0]) == "-" || string(string2[0]) == "-") && (string(string1[0]) != "-" || string(string2[0]) != "-") {
-		flag = true
-	}
-
 	if string(string1[0]) == "-" && string(string2[0]) != "-" {
+		flag = true
 		string1 = string1[1:]
 	}
-
 	if string(string1[0]) != "-" && string(string2[0]) == "-" {
+		flag = true
 		string2 = string2[1:]
 	}
 
@@ -242,13 +237,11 @@ func Multiply(a, b Bigint) Bigint {
 	}
 
 	if len(string1) < len(string2) {
-		x := string1
-		string1 = string2
-		string2 = x
+		string1,string2 = string2,string1
 	}
 
-	mySlice := make([]string, 0)
 
+	result := "0"
 	for i := len(string2) - 1; i > -1; i-- {
 		reminder := 0
 		mult := ""
@@ -265,85 +258,117 @@ func Multiply(a, b Bigint) Bigint {
 		for k := len(string2) - 1 - i; k > 0; k-- {
 			mult += "0"
 		}
-		mySlice = append(mySlice, mult)
+		result = add(result,mult)
+
 	}
-	res := Bigint{Value: "0"}
-	for _, v := range mySlice {
-		value := Bigint{Value: v}
-		res = Add(res, value)
-	}
+	
 
 	if flag {
-		res.Value = "-" + res.Value
+		result = "-" + result
 	}
-	return res
+	return Bigint{Value:result}
 }
 
-func Mod(a, b Bigint) Bigint {
-	err := errors.New("ZeroDivisionError: integer division or modulo by zero")
+func ModAndDivision(a, b Bigint) ( Bigint, Bigint) {
+	
 	string1 := a.Value
 	string2 := b.Value
-	result := ""
-	if compareStrings(string1, string2) == -1 {
-		return Bigint{Value: string1}
-	}
+	quotient:=""
+	remainder:= ""
+	
 	if string2 == "0" {
-		panic(err)
+		panic(ErrorZeroDivision)
 	}
+	if string1 == "0" {
+		return Bigint{Value:"0"},Bigint{Value:"0"}
+	}
+
+
+
 	if string(string1[0]) == "-" && string(string2[0]) != "-" {
-		result = mod(string1[1:], string2)
-		result = Sub(Bigint{Value: string2}, Bigint{Value: result}).Value
-	} else if string(string1[0]) != "-" && string(string2[0]) == "-" {
+		quotient,remainder= mod(string1[1:], string2)
+		
+		if remainder!="0"{
+			remainder = sub(string2, remainder)
+			quotient = add(quotient,"1")
+		}
+		return Bigint{Value:"-"+quotient},Bigint{Value:remainder}
+	} 
 
-		result = mod(string1, string2[1:])
-		result = "-" + Sub(Bigint{Value: string2[1:]}, Bigint{Value: result}).Value
-	} else if string(string1[0]) == "-" && string(string2[0]) == "-" {
-		result = "-" + mod(string1[1:], string2[1:])
 
-	} else {
-		result = mod(string1, string2)
+	if string(string1[0]) != "-" && string(string2[0]) == "-" {
 
-	}
+		quotient, remainder = mod(string1, string2[1:])
+		
+		if remainder!="0"{
+			remainder = "-" + sub(string2[1:],remainder)
+			quotient = add(quotient,"1")
+		}
+		return Bigint{Value:"-"+quotient},Bigint{Value:remainder}
+	}  
+	if string(string1[0]) == "-" && string(string2[0]) == "-" {
+		quotient, remainder = mod(string1[1:], string2[1:])
+		if remainder!="0"{
+			remainder = "-" + remainder
+		}
+		return Bigint{Value:quotient},Bigint{Value:remainder}
 
-	return Bigint{Value: result}
+	} 
+
+	quotient,remainder = mod(string1, string2)
+
+	
+
+	return Bigint{Value:quotient},Bigint{Value:remainder}
 }
 
-func mod(string1, string2 string) string {
+func mod(string1, string2 string) (string, string) {
+	
+	if compareStrings(string1, string2) == -1 {
+		return "0",string1
+	}
+
 	l := len(string2)
-	str1 := string1[:l]
-
+	dividend := string1[:l]
+	divisor:= string2
+	quotient := ""
+	remainder:= ""
+	
+	count := 0	
 	for {
-
-		if compareStrings(str1, string2) >= 0 {
-			str1 = Sub(Bigint{Value: str1}, Bigint{Value: string2}).Value
-
+		if compareStrings(dividend, divisor) >= 0 {
+			dividend = sub(dividend,divisor)
+			count++
 		} else if l >= len(string1) {
 			break
 		} else {
 
-			str1 = str1 + string(string1[l])
+			c := strconv.Itoa(count)
+			quotient = quotient + c
+			count = 0
+			
+			dividend = dividend + string(string1[l])
+			dividend = removeZeros(dividend)
 			l++
-
 		}
 	}
-	for strings.HasPrefix(str1, "0") {
-		str1 = str1[1:]
-	}
-	return str1
+	quotient += strconv.Itoa(count)
+	quotient,remainder = removeZeros(quotient),removeZeros(dividend)
+	return quotient,remainder
 }
 
-func (x *Bigint) Abs() Bigint {
+func (x Bigint) Abs() Bigint {
 	if x.Value[0] == '-' {
 		return Bigint{
 			Value: x.Value[1:],
 		}
 	}
-	if x.Value[0] == '+' {
-		return Bigint{
-			Value: x.Value[1:],
-		}
-	}
+	
 	return Bigint{
-		Value: x.Value,
-	}
+			Value: x.Value,
+		}
+		
+
 }
+
+
