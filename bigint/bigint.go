@@ -78,23 +78,25 @@ func max(num1, num2 int) int {
 	return num2
 }
 
-func Add(a, b Bigint) Bigint {
+func Add(a, b Bigint) (total Bigint) {
 	string1 := a.Value
 	string2 := b.Value
-	sum := ""
+	
 
 	if string(string1[0]) != "-" && string(string2[0]) == "-" {
-		return Sub(Bigint{Value: string1}, Bigint{Value: string2[1:]})
+		total.Value =  sub(string1,string2[1:])
+		return 
 	}
 	if string(string1[0]) == "-" && string(string2[0]) != "-" {
-		return Sub(Bigint{Value: string2}, Bigint{Value: string1[1:]})
+		total.Value =  sub(string2,string1[1:])
+		return
 	}
 	if string(string1[0]) == "-" && string(string2[0]) == "-" {
-		sum := "-"+add(string1[1:],string2[1:])
-		return Bigint{Value:sum}
+		total.Value= "-"+add(string1[1:],string2[1:])
+		return 
 	}
-	sum = add(string1, string2)
-	return Bigint{Value:sum}
+	total.Value = add(string1, string2)
+	return 
 }
 
 
@@ -168,7 +170,7 @@ func Sub(a, b Bigint) (subResult Bigint ){
 	return
 }
 
-func sub(string1, string2 string) string{
+func sub(string1, string2 string) (sub string){
 	compare := compareStrings(string1, string2)
 
 	if compare == -1 {
@@ -178,7 +180,7 @@ func sub(string1, string2 string) string{
 		return "0"
 	}
 	
-	sub := ""
+	
 	carry := 0
 	for i := 0; i < max(len(string1), len(string2)); i++ {
 		number1, number2 := 0, 0
@@ -208,8 +210,8 @@ func sub(string1, string2 string) string{
 		sub = "-" + sub
 
 	}
-
-	return removeZeros(sub)
+	sub = removeZeros(sub)
+	return 
 
 }
 
